@@ -3,6 +3,11 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import (
+    NoAlertPresentException,
+    UnexpectedAlertPresentException,
+    NoSuchElementException,
+)
 
 # Crawling을 통해 획득한 문자열을 정규식으로 통해 과목이름 별로 분리
 import re
@@ -10,21 +15,38 @@ import re
 # 분리한 과목이름 리스트를 통해 과목별 폴더 생성
 import os
 
+# 크롬 브라우저를 띄우지 않고 크롤링
+options = webdriver.ChromeOptions()
+options.add_argument("headless")
+
 test = False
 
-userID = str(input("ID: "))
-userPW = str(input("PW: "))
-
 if not test:
-    driver = webdriver.Chrome("./chromedriver.exe")
+    driver = webdriver.Chrome("./chromedriver.exe", options=options)
 
     url = "https://eclass.tukorea.ac.kr/ilos/main/member/login_form.acl"
 
     driver.get(url)
 
-    driver.find_element(By.NAME, "usr_id").send_keys(userID)
-    driver.find_element(By.NAME, "usr_pwd").send_keys(userPW)
-    driver.find_element(By.ID, "login_btn").click()
+    while True:
+        userID = str(input("ID: "))
+        userPW = str(input("PW: "))
+        try:
+            driver.find_element(By.NAME, "usr_id").send_keys(userID)
+            driver.find_element(By.NAME, "usr_pwd").send_keys(userPW)
+            driver.find_element(By.ID, "login_btn").click()
+            if url != driver.current_url:
+                break
+        except UnexpectedAlertPresentException as error:
+            alert = None
+            try:
+                alert = driver.switch_to.alert
+            except NoAlertPresentException:
+                pass
+            # alert.accept()
+            print("아이디와 비밀번호를 다시 확인해주세요.")
+        except (NoAlertPresentException, NoSuchElementException) as error:
+            print("아이디와 비밀번호를 다시 확인해주세요.")
 
     driver.find_element(
         By.CSS_SELECTOR, "#quick-menu-index > a:nth-child(1) > div"
