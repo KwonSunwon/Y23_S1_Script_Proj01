@@ -12,6 +12,7 @@ from selenium.common.exceptions import (
 # GUI
 from tkinter import *
 from tkinter.ttk import *
+from tkinter import messagebox, filedialog
 
 # Crawling을 통해 획득한 문자열을 정규식으로 통해 과목이름 별로 분리
 import re
@@ -19,15 +20,12 @@ import re
 # 분리한 과목이름 리스트를 통해 과목별 폴더 생성
 import os
 
-# GUI
-window = Tk()
-window.title("NewSemesterFolderCreator")
+# global
+window, driver = None, None
+rootPath = os.getcwd()
+url = "https://eclass.tukorea.ac.kr/ilos/main/member/login_form.acl"
 
-# 크롬 브라우저를 띄우지 않고 크롤링
-options = webdriver.ChromeOptions()
-options.add_argument("headless")
-
-test = False
+test = True
 
 if not test:
     driver = webdriver.Chrome("./chromedriver.exe", options=options)
@@ -67,26 +65,15 @@ if not test:
 
     driver.quit()
 
-if test:
+if False:
     subjectList = [
         "\n\n\n2023-1학기 정규과목\n\n\n\n3D게임프로그래밍1(01)\n\n\n\n이용희\n수 [7~8] 15:30~17:20 금 [7~8] 15:30~17:20 (E동511호,E동424호)\xa0\n\n\n\n\nSTL(02)\n\n\n\n윤정현\n월 [2~3] 10:30~12:20 화 [5~6] 13:30~15:20 (E동323호)\xa0\n\n\n\n\n네트워크 기초(03)\n\n\n\n김재경\n월 [6]    14:30~15:20 화 [2~3] 10:30~12:20 (E동322호)\xa0\n\n\n\n\n스크립트언어(04)\n\n\n\n이대현\n월 [9~10] 17:25~19:05 금 [3~4] 11:30~13:20 (TIP209호)\xa0\n\n\n\n\n인간과현대사회(04)\n\n\n\n박한경\n목 [11~13] 19:05~21:40 (산융405호)\xa0\n\n\n\n\n한국문학산책(03)\n\n\n\n문선영\n목 [6~8] 14:30~17:20 (산융206호)\xa0\n\n\n\n\n현대사회와스포츠문화(02)\n\n\n\n김석기\n수 [11~12] 19:05~20:50 (C동111호)\xa0\n\n\n\n"
     ]
 
-titleRegex = re.compile(r"[0-9]{4}-[1-2]{1}학기")
-subjectRegex = re.compile(r"\b(\S+(?:\s\S+)*)\([0-9]+\)")
-
-title = titleRegex.search(subjectList[0])
-
-subjects = subjectRegex.findall(subjectList[0])
-
-print(subjects)
-
-os.mkdir(title.group())
-for subject in subjects:
-    os.mkdir(title.group() + "/" + subject)
-
 
 def generate_gui():
+    global window
+
     window = Tk()
     window.title("NewSemesterFolderCreator")
 
@@ -94,28 +81,66 @@ def generate_gui():
     ui_subjectAndReadFrame = Frame(window)
     ui_subjectAndReadFrame.pack()
 
+    test = ["2134", "1234", "dsf", "ffd"]
+
+    subjectCheckBoxes = ui_generate_subjectLists(
+        frame=ui_subjectAndReadFrame, subjectList=test
+    )
+    for subjectCheckBox in subjectCheckBoxes:
+        subjectCheckBox.pack()
+
+    # 경로 선택 버튼
+    ui_pathSelectFrame = Frame(window)
+    ui_pathSelectFrame.pack()
+
+    ui_pathSelectButton = Button(
+        ui_pathSelectFrame, text="경로 선택", command=set_root_folder
+    )
+    ui_pathSelectButton.pack()
+
 
 def ui_generate_subjectLists(frame, subjectList=None):
     if subjectList == None:
         return
 
     subjectCheckBoxes = []
+    subjectCheckBoxesData = []
     for subject in subjectList:
-        subjectCheckBoxes.append(Checkbutton(frame, text=subject))
+        subjectCheckBoxesData.append(IntVar())
+        subjectCheckBoxes.append(
+            Checkbutton(
+                frame,
+                text=subject,
+                variable=subjectCheckBoxesData[-1],
+                command=ui_select_subject,
+            )
+        )
+        subjectCheckBoxesData[-1].set(1)
+    return subjectCheckBoxes
+
+
+def ui_select_subject():
+    pass  # 여기에 데이터 어떻게 끌고오지?...
 
 
 def web_generate_webdriver():
+    global driver
+
     # 크롬 브라우저를 띄우지 않고 크롤링
     options = webdriver.ChromeOptions()
     options.add_argument("headless")
-    driver = webdriver.Chrome("./chromedriver.exe", options=options)
-    url = "https://eclass.tukorea.ac.kr/ilos/main/member/login_form.acl"
+
+    # 크롬 드라이버 경로
+    driverPath = os.path.abspath(__file__ + "/chromedriver.exe")
+    driver = webdriver.Chrome(driverPath, options=options)
     driver.get(url)
-    return driver
 
 
 def web_login_eClass():
+    global driver
+
     while True:
+        # tkinter의 입력창에서 가져오도록 변경
         userID = str(input("ID: "))
         userPW = str(input("PW: "))
         try:
@@ -139,6 +164,8 @@ def web_login_eClass():
 
 
 def web_get_subject_list():
+    global driver
+
     driver.find_element(
         By.CSS_SELECTOR, "#quick-menu-index > a:nth-child(1) > div"
     ).click()
@@ -160,11 +187,25 @@ def find_semester_and_subjects(subjectStr):
 
 def set_root_folder():
     # tk로 폴더 선택
+    rootPath = filedialog.askdirectory()
     # 해당 폴더로 이동
-    pass
+    os.chdir(rootPath)
 
 
 def make_folder(semester, subjects):
     os.mkdir(semester)
     for subject in subjects:
         os.mkdir(semester + "/" + subject)
+
+
+def main():
+    # generate_gui()
+    # window.mainloop()
+    
+    web_generate_webdriver()
+    web_login_eClass()
+    subjectList = web_get_subject_list()
+
+
+if __name__ == "__main__":
+    main()
