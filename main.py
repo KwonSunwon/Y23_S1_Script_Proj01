@@ -24,6 +24,7 @@ import os
 window, driver = None, None
 rootPath = os.getcwd()
 url = "https://eclass.tukorea.ac.kr/ilos/main/member/login_form.acl"
+ui_showPath = None
 
 test = True
 
@@ -72,7 +73,7 @@ if False:
 
 
 def generate_gui():
-    global window
+    global window, ui_showPath
 
     window = Tk()
     window.title("NewSemesterFolderCreator")
@@ -96,7 +97,12 @@ def generate_gui():
     ui_pathSelectButton = Button(
         ui_pathSelectFrame, text="경로 선택", command=set_root_folder
     )
-    ui_pathSelectButton.pack()
+    ui_pathSelectButton.pack(side=RIGHT)
+
+    # 경로 표시
+    ui_showPath = Label(ui_pathSelectFrame, text=rootPath)
+    ui_showPath.pack(side=LEFT)
+    ui_showPath.update()
 
 
 def ui_generate_subjectLists(frame, subjectList=None):
@@ -190,6 +196,8 @@ def set_root_folder():
     rootPath = filedialog.askdirectory()
     # 해당 폴더로 이동
     os.chdir(rootPath)
+    # 경로 표시
+    ui_showPath.config(text=rootPath)
 
 
 def make_folder(semester, subjects):
@@ -199,12 +207,12 @@ def make_folder(semester, subjects):
 
 
 def main():
-    # generate_gui()
-    # window.mainloop()
-    
-    web_generate_webdriver()
-    web_login_eClass()
-    subjectList = web_get_subject_list()
+    generate_gui()
+    window.mainloop()
+
+    # web_generate_webdriver()
+    # web_login_eClass()
+    # subjectList = web_get_subject_list()
 
 
 if __name__ == "__main__":
