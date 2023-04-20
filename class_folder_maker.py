@@ -62,6 +62,8 @@ def set_folder_path():
 folderPath = StringVar()
 button_folderSet = Button(window, text="Select Folder", command=set_folder_path)
 button_folderSet.grid(row=2, column=1, padx=2, pady=2)
+folderPath = StringVar()
+folderPath.set(os.getcwd())
 entry_folderPath = Entry(window, textvariable=folderPath, width=30)
 entry_folderPath.grid(row=2, column=0, padx=10, pady=10)
 
