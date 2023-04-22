@@ -18,12 +18,14 @@ import os
 import time
 
 url = "https://eclass.tukorea.ac.kr/ilos/main/member/login_form.acl"
+driverPath = "./chromedriver.exe"
 
 # GUI
 window = Tk()
 window.title("Class Folder Maker")
-window.rowconfigure(0, minsize=50)
+window.rowconfigure(0, minsize=20)
 window.columnconfigure(0, minsize=20)
+window.resizable(False, False)
 
 subWindow = None
 
@@ -35,18 +37,22 @@ loginFrame = LabelFrame(
     pady=5,
     padx=5,
 )
-loginFrame.grid(row=0, column=0, columnspan=2)
+loginFrame.grid(
+    row=0,
+    column=0,
+    columnspan=3,
+)
 
 label_id = Label(loginFrame, text="ID: ", width=3)
 label_id.grid(row=0, column=0)
-entry_id = Entry(loginFrame, width=10)
+entry_id = Entry(loginFrame, width=15)
 entry_id.grid(row=0, column=1)
 
 entry_id.focus()
 
 label_pw = Label(loginFrame, text="PW: ", width=3)
 label_pw.grid(row=0, column=2)
-entry_pw = Entry(loginFrame, width=10, show="*")
+entry_pw = Entry(loginFrame, width=15, show="*")
 entry_pw.grid(row=0, column=3)
 
 entry_pw.bind("<Return>", lambda event: login_and_make_folder(event))
@@ -61,17 +67,31 @@ def set_folder_path():
 
 folderPath = StringVar()
 button_folderSet = Button(window, text="Select Folder", command=set_folder_path)
-button_folderSet.grid(row=2, column=1, padx=2, pady=2)
+button_folderSet.grid(row=2, column=1, padx=2, pady=2, sticky="w")
 folderPath = StringVar()
 folderPath.set(os.getcwd())
-entry_folderPath = Entry(window, textvariable=folderPath, width=30)
-entry_folderPath.grid(row=2, column=0, padx=10, pady=10)
+entry_folderPath = Entry(window, textvariable=folderPath, width=40)
+entry_folderPath.grid(row=2, column=0, padx=3, pady=3)
 
 
 # 브라우저 숨기기
 showBrowser = BooleanVar()
-check_showBrowser = Checkbutton(window, text="Show Browser", variable=showBrowser)
-check_showBrowser.grid(row=3, column=0, sticky="w", padx=10)
+check_showBrowser = Checkbutton(
+    window, text="Show Crawling Browser", variable=showBrowser
+)
+check_showBrowser.grid(row=3, column=0, padx=2, pady=2, sticky="w")
+
+
+# driver 위치 설정
+def set_driver_path():
+    global driverPath
+    path = filedialog.askopenfilename()
+    driverPath = path
+
+
+driverPath = StringVar()
+button_driverSet = Button(window, text="Select Driver", command=set_driver_path)
+button_driverSet.grid(row=3, column=1, padx=2, pady=2, sticky="w")
 
 
 def login_fail():
@@ -83,7 +103,7 @@ def login(event=None):
     options = webdriver.ChromeOptions()
     if not showBrowser.get():
         options.add_argument("headless")
-    driver = webdriver.Chrome("./chromedriver.exe", options=options)
+    driver = webdriver.Chrome(driverPath, options=options)
     driver.get(url)
 
     try:
@@ -188,4 +208,5 @@ def login_and_make_folder(event=None):
 button_login = Button(loginFrame, text="Login", command=login_and_make_folder)
 button_login.grid(row=0, column=4, padx=5)
 
+window.bind("<Escape>", lambda event: window.destroy())
 window.mainloop()
