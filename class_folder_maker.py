@@ -113,7 +113,7 @@ def login(event=None):
         login_button = driver.find_element(By.ID, "login_btn")
         login_button.click()
 
-        time.sleep(0.5)
+        time.sleep(0.25)  # 페이지 로딩 대기
 
         if url == driver.current_url:
             login_fail()

@@ -192,11 +192,8 @@ def find_semester_and_subjects(subjectStr):
 
 
 def set_root_folder():
-    # tk로 폴더 선택
     rootPath = filedialog.askdirectory()
-    # 해당 폴더로 이동
     os.chdir(rootPath)
-    # 경로 표시
     ui_showPath.config(text=rootPath)
 
 
