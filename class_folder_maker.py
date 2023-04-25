@@ -98,12 +98,13 @@ def login_fail():
 
 
 def login(event=None):
-    options = webdriver.ChromeOptions()
-    if not showBrowser.get():
+    options = webdriver.ChromeOptions()  # 크롬 옵션 객체 생성
+    if not showBrowser.get():  # 사용자 설정에 따라 브라우저 숨기기
         options.add_argument("headless")
-    driver = webdriver.Chrome(driverPath, options=options)
-    driver.get(url)
+    driver = webdriver.Chrome(driverPath, options=options)  # driver 객체 생성
+    driver.get(url)  # url 접속
 
+    # 로그인
     try:
         id_input = driver.find_element(By.NAME, "usr_id")
         pw_input = driver.find_element(By.NAME, "usr_pwd")
@@ -115,10 +116,12 @@ def login(event=None):
 
         time.sleep(0.25)  # 페이지 로딩 대기
 
+        # url이 변경되지 않은 경우 정상 로그인 X
         if url == driver.current_url:
             login_fail()
             return None
 
+    # 예외 처리
     except (
         UnexpectedAlertPresentException,
         NoAlertPresentException,
@@ -127,6 +130,7 @@ def login(event=None):
         login_fail()
         return None
 
+    # 수강 과목 목록 가져오기
     driver.find_element(
         By.CSS_SELECTOR, "#quick-menu-index > a:nth-child(1) > div"
     ).click()
@@ -134,8 +138,10 @@ def login(event=None):
     subjectList = main.select("#lecture_list > div:nth-child(2) > div:nth-child(1)")
     subjectList = [subject.text for subject in subjectList]
 
+    # 브라우저 종료
     driver.quit()
 
+    # 문자열로 반환
     return subjectList[0]
 
 
