@@ -18,7 +18,6 @@ import os
 import time
 
 url = "https://eclass.tukorea.ac.kr/ilos/main/member/login_form.acl"
-driverPath = "./chromedriver.exe"
 
 # GUI
 window = Tk()
@@ -89,7 +88,7 @@ def set_driver_path():
     driverPath = path
 
 
-driverPath = StringVar()
+driverPath = os.path.join(os.getcwd(), "chromedriver.exe")
 button_driverSet = Button(window, text="Select Driver", command=set_driver_path)
 button_driverSet.grid(row=3, column=1, padx=2, pady=2, sticky="w")
 
@@ -99,7 +98,6 @@ def login_fail():
 
 
 def login(event=None):
-    print("call login")
     options = webdriver.ChromeOptions()
     if not showBrowser.get():
         options.add_argument("headless")
@@ -121,18 +119,14 @@ def login(event=None):
             login_fail()
             return None
 
-    except UnexpectedAlertPresentException as error:
-        alert = None
-        try:
-            alert = driver.switch_to.alert
-            login_fail()
-            return None
-        except NoAlertPresentException:
-            login_fail()
-            return None
-    except (NoAlertPresentException, NoSuchElementException) as error:
+    except (
+        UnexpectedAlertPresentException,
+        NoAlertPresentException,
+        NoSuchElementException,
+    ):
         login_fail()
         return None
+
     driver.find_element(
         By.CSS_SELECTOR, "#quick-menu-index > a:nth-child(1) > div"
     ).click()
@@ -169,7 +163,7 @@ def login_and_make_folder(event=None):
 
     subjectStr = login()
     if subjectStr is None:
-        return None
+        return
     title, subjects = find_subject(subjectStr)
 
     if subWindow is not None:
